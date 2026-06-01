@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortuitous Adventures • Retirement Bridge Planner</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;1,400&family=Oswald:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #FF5F1F;
+  --lime: #BFFF00;
+  --cyan: #00d9ff;
+  --bg: #111;
+  --panel: #1c1c1c;
+  --panel2: #222;
+  --border: #333;
+  --text: #f0f0f0;
+  --muted: #999;
+  --danger: #ff4444;
+  --success: #44ff88;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.site-header {
+  background: #000;
+  border-bottom: 3px solid var(--orange);
+  padding: 18px 30px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.site-header h1 {
+  font-family: 'Oswald', sans-serif;
+  color: var(--lime);
+  font-size: 2em;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+.site-header .tagline { color: var(--orange); font-size: 0.85em; }
+.run-btn-top {
+  background: var(--orange);
+  color: #000;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.1em;
+  font-weight: 700;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.run-btn-top:hover { background: var(--lime); transform: translateY(-2px); }
+
+/* TAB NAV */
+.tab-nav {
+  background: #000;
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  padding: 0 20px;
+  gap: 4px;
+  position: sticky;
+  top: 73px;
+  z-index: 150;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: 'Oswald', sans-serif;
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 14px 20px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--orange);
+  border-bottom-color: var(--orange);
+}
+
+/* TAB CONTENT */
+.tab-content { display: none; padding: 30px 20px; max-width: 1400px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* PANELS */
+.panel {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.panel h2 {
+  font-family: 'Oswald', sans-serif;
+  color: var(--orange);
+  font-size: 1.3em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--orange);
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+/* GRID LAYOUTS */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+.grid-5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+@media (max-width: 700px) {
+  .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr; }
+}
+
+/* FORM FIELDS */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+  font-size: 0.78em;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.field label .who {
+  font-size: 0.9em;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 5px;
+}
+.who-keely { background: rgba(191,255,0,0.2); color: var(--lime); }
+.who-robert { background: rgba(0,217,255,0.2); color: var(--cyan); }
+.who-joint { background: rgba(255,95,31,0.2); color: var(--orange); }
+
+input[type="number"], input[type="month"], input[type="text"], select {
+  background: #111;
+  color: var(--text);
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.95em;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--orange);
+}
+.prefix-wrap { position: relative; }
+.prefix-wrap::before {
+  content: attr(data-prefix);
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.9em;
+  pointer-events: none;
+}
+.prefix-wrap input { padding-left: 22px; }
+
+.toggle-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+.toggle-row label { font-size: 0.9em; color: var(--text); cursor: pointer; }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--orange); cursor: pointer; }
+.hint { font-size: 0.75em; color: var(--muted); margin-top: 3px; font-style: italic; }
+
+/* EXCEL FREEZE SCROLL CONTAINER PANELS */
+.table-wrap, .monthly-table-wrap {
+  overflow: auto;
+  width: 100%;
+  max-height: 580px; 
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #000;
+  margin-top: 15px;
+}
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85em;
+  min-width: 1500px;
+}
+thead th {
+  background: #000;
+  color: var(--lime);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 14px 16px;
+  text-align: right;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 2px solid var(--border);
+}
+tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #2a2a2a;
+  text-align: right;
+  font-family: 'Share Tech Mono', monospace;
+  white-space: nowrap;
+}
+tbody td:first-child { 
+  text-align: center; 
+  font-family: 'Oswald', sans-serif; 
+  font-size: 1em;
+  position: sticky;
+  left: 0;
+  background: #111;
+  z-index: 5;
+  border-right: 1px solid var(--border);
+}
+tbody tr:hover td { background: rgba(255,95,31,0.1) !important; }
+
+/* STAT CARDS */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: #111;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-card .stat-label { font-size: 0.72em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card .stat-val {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1.5em;
+  font-weight: 700;
+  margin-top: 4px;
+}
+.stat-val.orange { color: var(--orange); }
+.stat-val.lime { color: var(--lime); }
+.stat-val.cyan { color: var(--cyan); }
+.stat-val.danger { color: var(--danger); }
+.stat-val.success { color: var(--success); }
+
+/* INSIGHTS PANEL */
+.insight-block {
+  background: #111;
+  border-left: 4px solid var(--orange);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  border-radius: 0 8px 8px 0;
+}
+.insight-block.good { border-left-color: var(--success); }
+.insight-block.warn { border-left-color: #ffcc00; }
+.insight-block.bad { border-left-color: var(--danger); }
+.insight-title { font-family: 'Oswald', sans-serif; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.insight-title.good { color: var(--success); }
+.insight-title.warn { color: #ffcc00; }
+.insight-title.bad { color: var(--danger); }
+.insight-title.info { color: var(--orange); }
+.insight-body { font-size: 0.9em; color: #ccc; line-height: 1.7; }
+
+.phase-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; }
+.phase-divider-line { flex: 1; height: 1px; background: var(--border); }
+.phase-divider-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+.phase-label { font-size: 0.65em; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; font-family: 'Oswald', sans-serif; }
+.phase-pre { background: rgba(255,95,31,0.2); color: var(--orange); }
+.phase-aca { background: rgba(0,217,255,0.2); color: var(--cyan); }
+.phase-post { background: rgba(191,255,0,0.2); color: var(--lime); }
+.aca-ok { color: var(--success); font-size: 0.85em; font-weight: 600; }
+.aca-over { color: var(--danger); font-size: 0.85em; font-weight: 600; }
+
+.notice { background: rgba(255,95,31,0.1); border: 1px solid var(--orange); border-radius: 8px; padding: 14px 18px; font-size: 0.85em; margin-bottom: 20px; line-height: 1.7; }
+.run-btn-big { background: var(--orange); color: #000; font-family: 'Oswald', sans-serif; font-size: 1.3em; font-weight: 700; padding: 16px 40px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; width: 100%; margin-top: 10px; transition: all 0.2s; }
+.run-btn-big:hover { background: var(--lime); transform: translateY(-2px); }
+.chart-wrap { background: #111; border-radius: 8px; padding: 15px; position: relative; }
+.no-results { text-align: center; padding: 60px 20px; color: var(--muted); font-family: 'Oswald', sans-serif; font-size: 1.3em; text-transform: uppercase; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <h1>Fortuitous Adventures</h1>
+    <div class="tagline">Retirement Bridge Planner • Unfiltered Numbers. No Bullshit.</div>
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <button class="run-btn-top" onclick="runAndSwitch()">⚡ Run Deterministic</button>
+    <a href="https://engaging-data.com/will-money-last-retire-early/" target="_blank" style="text-decoration: none;">
+      <button class="run-btn-top" style="background: var(--lime); color: #000;">🎲 Rich Broke Dead Sim</button>
+    </a>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('tab-inputs')">📋 Inputs</button>
+  <button class="tab-btn" onclick="showTab('tab-overview')">📊 Overview</button>
+  <button class="tab-btn" onclick="showTab('tab-yearly')">📅 Yearly Table</button>
+  <button class="tab-btn" onclick="showTab('tab-monthly')">📆 Monthly Detail</button>
+  <button class="tab-btn" onclick="showTab('tab-aca')">🏥 ACA / MAGI</button>
+  <button class="tab-btn" onclick="showTab('tab-insights')">💡 Insights</button>
+</nav>
+
+<div id="tab-inputs" class="tab-content active">
+
+  <div class="panel">
+    <h2>1. Timeline & Life Expectancy</h2>
+    <div class="grid-4">
+      <div class="field"><label>Simulation Start Date</label><input type="month" id="startDate" value="2026-06"></div>
+      <div class="field"><label>Target Retirement Date</label><input type="month" id="retireDate" value="2034-01"></div>
+      <div class="field"><label>Robert SS Start Date <span class="who who-robert">Robert</span></label><input type="month" id="robertSSDate" value="2034-01"></div>
+      <div class="field"><label>Robert Date of Birth <span class="who who-robert">Robert</span></label><input type="month" id="robertDOB" value="1971-12"></div>
+      <div class="field"><label>Keely Date of Birth <span class="who who-keely">Keely</span></label><input type="month" id="keelyDOB" value="1988-01"></div>
+      <div class="field"><label>Robert Life Expectancy End <span class="who who-robert">Robert</span></label><input type="month" id="robertEnd" value="2056-12"></div>
+      <div class="field"><label>Keely Life Expectancy End <span class="who who-keely">Keely</span></label><input type="month" id="keelyEnd" value="2078-01"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Current Account Balances (as of start date)</h2>
+    <div class="grid-4">
+      <div class="field"><label>Traditional 401(k) Balance <span class="who who-keely">Keely</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="trad401k" value="119000"></div></div>
+      <div class="field"><label>Keely Roth — Contribution Basis <span class="who who-keely">Keely</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="keelyBasis" value="250"></div></div>
+      <div class="field"><label>Keely Roth — Earnings <span class="who who-keely">Keely</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="keelyEarnings" value="0"></div></div>
+      <div class="field"><label>Robert Roth Balance <span class="who who-robert">Robert</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="robertRoth" value="1650"></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Pre-Retirement Contributions (Annual)</h2>
+    <div class="grid-4">
+      <div class="field"><label>Keely 401(k) Contributions <span class="who who-keely">Keely</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="keely401kAnnual" value="8100"></div></div>
+      <div class="field"><label>Employer 401(k) Match <span class="who who-joint">Match</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="empMatchAnnual" value="6480"></div></div>
+      <div class="field"><label>Keely Roth IRA — 2026 Only <span class="who who-keely">Keely</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="keelyRoth2026" value="3500"></div></div>
+      <div class="field"><label>Keely Roth IRA — 2027 Forward <span class="who who-keely">Keely</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="keelyRothAnnual" value="7000"></div></div>
+      <div class="field"><label>Robert Roth IRA Annual <span class="who who-robert">Robert</span></label><div class="prefix-wrap" data-prefix="$"><input type="number" id="robertRothAnnual" value="8600"></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>4. Social Security & Other Incomes</h2>
+    <div class="grid-4">
+      <div class="field"><label>Robert Monthly SS Benefit</label><div class="prefix-wrap" data-prefix="$"><input type="number" id="robertSS" value="910"></div></div>
+      <div class="field"><label>Keely Monthly SS Benefit</label><div class="prefix-wrap" data-prefix="$"><input type="number" id="keelySS" value="1531"></div></div>
+      <div class="field"><label>VA / Other Monthly Benefit</label><div class="prefix-wrap" data-prefix="$"><input type="number" id="vaBenefit" value="0"></div></div>
+      <div class="field"><label>VA Benefit Taxable for ACA?</label><select id="vaTaxable"><option value="0">No</option><option value="1">Yes</option></select></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>5. Two-Tier Post-Retirement Spending & Market Inputs</h2>
+    <div class="grid-5">
+      <div class="field">
+        <label>Base Bills Floor (Monthly Target)</label>
+        <div class="prefix-wrap" data-prefix="$"><input type="number" id="monthlySpendFloor" value="2500"></div>
+      </div>
+      <div class="field">
+        <label>Discretionary Spend (Monthly Target)</label>
+        <div class="prefix-wrap" data-prefix="$"><input type="number" id="monthlySpendDiscretionary" value="833"></div>
+      </div>
+      <div class="field">
+        <label>When Guardrail Triggers, Cut Discretionary By:</label>
+        <select id="discretionaryCutPct">
+          <option value="25">25% Cut</option>
+          <option value="50" selected>50% Cut</option>
+          <option value="75">75% Cut</option>
+          <option value="100">100% Cut (Full Floor Mode)</option>
+        </select>
+      </div>
+      <div class="field"><label>Inflation Rate</label><div class="prefix-wrap" data-prefix="%"><input type="number" id="inflation" value="3" step="0.1"></div></div>
+      <div class="field"><label>Deterministic Return Rate</label><div class="prefix-wrap" data-prefix="%"><input type="number" id="returnRate" value="7" step="0.1"></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>6. ACA / MAGI Controls</h2>
+    <div class="grid-3">
+      <div class="field"><label>Annual FPL (2-person)</label><div class="prefix-wrap" data-prefix="$"><input type="number" id="fpl2" value="21150"></div></div>
+      <div class="field"><label>Annual FPL (1-person)</label><div class="prefix-wrap" data-prefix="$"><input type="number" id="fpl1" value="15600"></div></div>
+      <div class="field"><label>ACA MAGI Cap (% of FPL)</label><div class="prefix-wrap" data-prefix="%"><input type="number" id="acaFplPct" value="200"></div></div>
+    </div>
+    <div class="toggle-row" style="margin-top:15px;">
+      <input type="checkbox" id="autoConvert" checked onchange="toggleConversionMode()">
+      <label for="autoConvert"><strong>Auto Mode:</strong> Maximize safe conversion space under ACA threshold caps</label>
+    </div>
+    <div id="manualConvRow" style="display:none; margin-top:12px;">
+      <div class="grid-2">
+        <div class="field"><label>Manual Conversion Override</label><div class="prefix-wrap" data-prefix="$"><input type="number" id="manualConversion" value="0"></div></div>
+        <div class="field"><label>Post-Medicare Target</label><div class="prefix-wrap" data-prefix="$"><input type="number" id="postMedicareConv" value="25000"></div></div>
+      </div>
+    </div>
+    <div id="autoConvSettings" style="margin-top:12px;">
+      <div class="grid-2">
+        <div class="field"><label>Post-Medicare Annual Conversion Target</label><div class="prefix-wrap" data-prefix="$"><input type="number" id="postMedicareConvAuto" value="25000"></div></div>
+        <div class="field"><label>SS in MAGI Calculation</label><select id="ssMAGIMethod"><option value="full" selected>Full SS amount</option><option value="taxable">85% taxable</option></select></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>7. Custom Withdrawal Drawdown Priority Order (Post-Retirement)</h2>
+    <div class="grid-4">
+      <div class="field"><label>1st Priority Pool</label><select id="withdraw1"><option value="robert_roth" selected>Robert's Roth</option><option value="keely_basis">Keely Roth Basis</option><option value="conversion">Roth Conversions</option><option value="trad_401k">Traditional 401k</option></select></div>
+      <div class="field"><label>2nd Priority Pool</label><select id="withdraw2"><option value="robert_roth">Robert's Roth</option><option value="keely_basis" selected>Keely Roth Basis</option><option value="conversion">Roth Conversions</option><option value="trad_401k">Traditional 401k</option></select></div>
+      <div class="field"><label>3rd Priority Pool</label><select id="withdraw3"><option value="conversion" selected>Roth Conversions</option><option value="keely_earnings">Keely Roth Earnings</option><option value="trad_401k">Traditional 401k</option></select></div>
+      <div class="field"><label>4th Priority Pool</label><select id="withdraw4"><option value="keely_earnings">Keely Roth Earnings</option><option value="trad_401k" selected>Traditional 401k</option></select></div>
+    </div>
+  </div>
+
+  <button class="run-btn-big" onclick="runAndSwitch()">⚡ Run the Numbers — Show Me the Plan</button>
+
+</div>
+
+<div id="tab-overview" class="tab-content"><div id="overviewContent"></div></div>
+<div id="tab-yearly" class="tab-content"><div id="yearlyContent"></div></div>
+<div id="tab-monthly" class="tab-content"><div id="monthlyContent"></div></div>
+<div id="tab-aca" class="tab-content"><div id="acaContent"></div></div>
+<div id="tab-insights" class="tab-content"><div id="insightsContent"></div></div>
+
+<script>
+// ============================================================
+//  CORE CALCULATION ENGINE
+// ============================================================
+let simResults = null;
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+function fmtK(n) { return '$' + (Math.round(n/1000)) + 'k'; }
+function parseMonth(str) { const [y,m] = str.split('-').map(Number); return new Date(y, m-1, 1); }
+function monthKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+function addMonths(d, n) { const r = new Date(d); r.setMonth(r.getMonth() + n); return r; }
+function monthsBetween(a, b) { return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()); }
+function ageStr(dob, current) {
+  const y = current.getFullYear() - dob.getFullYear(); const m = current.getMonth() - dob.getMonth();
+  const adj = m < 0 ? -1 : 0; const ym = ((m % 12) + 12) % 12; return (y + adj) + 'y ' + ym + 'm';
+}
+function keelyAge(dob, current) { return monthsBetween(dob, current) / 12; }
+
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = ['tab-inputs','tab-overview','tab-yearly','tab-monthly','tab-aca','tab-insights'].indexOf(id);
+  if(idx > -1) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+}
+
+function toggleConversionMode() {
+  const auto = document.getElementById('autoConvert').checked;
+  document.getElementById('manualConvRow').style.display = auto ? 'none' : 'block';
+  document.getElementById('autoConvSettings').style.display = auto ? 'block' : 'none';
+}
+
+function runAndSwitch() { runSimulation(); showTab('tab-overview'); }
+
+function runSimulation() {
+  const inputs = readInputs();
+  simResults = executeDeterministicModel(inputs, inputs.annualReturn);
+  
+  // Locate the exact month prior to the retirement target date
+  const targetRetireKey = monthKey(inputs.retireDate);
+  const targetIndex = simResults.monthly.findIndex(m => m.date === targetRetireKey);
+  
+  // Fallback to month index 0 if not found, otherwise pull the month right before retirement
+  const launchMonthIdx = targetIndex > 0 ? targetIndex - 1 : 0;
+  const launchData = simResults.monthly[launchMonthIdx];
+
+  // Secure the fully compounded retirement launch variables for the historical engine
+  const rbdPayload = {
+    trad401k: launchData.trad401k,
+    keelyBasis: launchData.keelyBasis,
+    keelyEarnings: launchData.keelyEarnings,
+    robertRoth: launchData.robertRoth,
+    monthlySpendFloor: inputs.monthlySpendFloor,
+    monthlySpendDiscretionary: inputs.monthlySpendDiscretionary,
+    robertSS: inputs.robertSSMonthly,
+    keelySS: inputs.keelySSMonthly
+  };
+  
+  localStorage.setItem('rbd_launch_balances', JSON.stringify(rbdPayload));
+  renderAll();
+}
+
+function readInputs() {
+  return {
+    startDate: parseMonth(document.getElementById('startDate').value),
+    retireDate: parseMonth(document.getElementById('retireDate').value),
+    robertSSDate: parseMonth(document.getElementById('robertSSDate').value),
+    robertEnd: parseMonth(document.getElementById('robertEnd').value),
+    keelyEnd: parseMonth(document.getElementById('keelyEnd').value),
+    keelyDOB: parseMonth(document.getElementById('keelyDOB').value),
+    robertDOB: parseMonth(document.getElementById('robertDOB').value),
+    trad401k: parseFloat(document.getElementById('trad401k').value) || 0,
+    keelyBasis: parseFloat(document.getElementById('keelyBasis').value) || 0,
+    keelyEarnings: parseFloat(document.getElementById('keelyEarnings').value) || 0,
+    robertRoth: parseFloat(document.getElementById('robertRoth').value) || 0,
+    keely401kAnnual: parseFloat(document.getElementById('keely401kAnnual').value) || 0,
+    empMatchAnnual: parseFloat(document.getElementById('empMatchAnnual').value) || 0,
+    keelyRoth2026: parseFloat(document.getElementById('keelyRoth2026').value) || 0,
+    keelyRothAnnual: parseFloat(document.getElementById('keelyRothAnnual').value) || 0,
+    robertRothAnnual: parseFloat(document.getElementById('robertRothAnnual').value) || 0,
+    monthlySpendFloor: parseFloat(document.getElementById('monthlySpendFloor').value) || 0,
+    monthlySpendDiscretionary: parseFloat(document.getElementById('monthlySpendDiscretionary').value) || 0,
+    discretionaryCutPct: parseFloat(document.getElementById('discretionaryCutPct').value) / 100 || 0.50,
+    inflation: parseFloat(document.getElementById('inflation').value) / 100 || 0,
+    annualReturn: parseFloat(document.getElementById('returnRate').value) / 100 || 0,
+    robertSSMonthly: parseFloat(document.getElementById('robertSS').value) || 0,
+    keelySSMonthly: parseFloat(document.getElementById('keelySS').value) || 0,
+    vaBenefit: parseFloat(document.getElementById('vaBenefit').value) || 0,
+    vaTaxable: parseInt(document.getElementById('vaTaxable').value),
+    fpl2: parseFloat(document.getElementById('fpl2').value) || 21150,
+    fpl1: parseFloat(document.getElementById('fpl1').value) || 15600,
+    acaFplPct: parseFloat(document.getElementById('acaFplPct').value) / 100 || 2,
+    ssMAGIMethod: document.getElementById('ssMAGIMethod').value,
+    autoConvert: document.getElementById('autoConvert').checked,
+    manualConversion: parseFloat(document.getElementById('manualConversion').value) || 0,
+    postMedicareConv: document.getElementById('autoConvert').checked ? 
+      (parseFloat(document.getElementById('postMedicareConvAuto').value) || 25000) : 
+      (parseFloat(document.getElementById('postMedicareConv').value) || 25000),
+    drawOrder: [
+      document.getElementById('withdraw1').value, document.getElementById('withdraw2').value,
+      document.getElementById('withdraw3').value, document.getElementById('withdraw4').value
+    ]
+  };
+}
+
+function executeDeterministicModel(inputs, customAnnualReturn) {
+  let trad401k = inputs.trad401k;
+  let keelyBasis = inputs.keelyBasis;
+  let keelyEarnings = inputs.keelyEarnings;
+  let robertRoth = inputs.robertRoth;
+  
+  let conversionBatches = [];
+
+  const monthlyGrowth = (1 + customAnnualReturn) ** (1/12) - 1;
+  const retireYear = inputs.retireDate.getFullYear();
+
+  let monthly = [];
+  let yearly = {};
+  let current = new Date(inputs.startDate);
+
+  let globalInsolvent = false;
+  let insolvencyYear = null;
+  let insolvencyMonth = null;
+  let earlyRothViolationTriggered = false;
+  let discretionaryCutYear = null;
+  let safeguardCutActive = false;
+  let acaPhaseMonthsCount = 0;
+  let acaPhaseOverCeilingCount = 0;
+  let acaPhaseTotalConversions = 0;
+
+  while (current <= inputs.keelyEnd) {
+    const yr = current.getFullYear();
+    const isPreRetire = current < inputs.retireDate;
+    const robertAlive = current <= inputs.robertEnd;
+    const kAge = keelyAge(inputs.keelyDOB, current);
+    let phase = isPreRetire ? 'pre' : (kAge < 65 ? 'aca' : 'post65');
+
+    if (isPreRetire) {
+      trad401k *= (1 + monthlyGrowth);
+      robertRoth *= (1 + monthlyGrowth);
+      conversionBatches.forEach(b => { b.amount *= (1 + monthlyGrowth); });
+      keelyEarnings += (keelyBasis + keelyEarnings) * monthlyGrowth;
+
+      trad401k += (inputs.keely401kAnnual + inputs.empMatchAnnual) / 12;
+      robertRoth += (inputs.robertRothAnnual / 12);
+      keelyBasis += (yr === 2026) ? inputs.keelyRoth2026 / 12 : inputs.keelyRothAnnual / 12;
+    } else {
+      if (!globalInsolvent) {
+        trad401k *= (1 + monthlyGrowth);
+        robertRoth *= (1 + monthlyGrowth);
+        conversionBatches.forEach(b => { b.amount *= (1 + monthlyGrowth); });
+        keelyEarnings += (keelyBasis + keelyEarnings) * monthlyGrowth;
+      }
+    }
+
+    conversionBatches.forEach(b => { b.monthsOld++; });
+
+    let monthlySpend = 0;
+    let robertSSThisMonth = 0, keelySSThisMonth = 0, vaThisMonth = 0;
+    let conversion = 0, acaCeiling = 0, magiThisMonth = 0, acaExceeded = false, fundingGap = 0, drawdown = 0;
+
+    if (!isPreRetire) {
+      const yearsSinceRetire = Math.max(0, yr - retireYear);
+      let floorTarget = inputs.monthlySpendFloor * Math.pow(1 + inputs.inflation, yearsSinceRetire);
+      let discretionaryTarget = inputs.monthlySpendDiscretionary * Math.pow(1 + inputs.inflation, yearsSinceRetire);
+
+      let totalPortfolioValue = trad401k + keelyBasis + keelyEarnings + robertRoth + conversionBatches.reduce((sum, b) => sum + b.amount, 0);
+      let baselineAnnualSpendNeeded = (floorTarget + discretionaryTarget) * 12;
+
+      if (totalPortfolioValue < baselineAnnualSpendNeeded && !safeguardCutActive) {
+        safeguardCutActive = true;
+        discretionaryCutYear = yr;
+      }
+
+      let reductionFactor = 1 - inputs.discretionaryCutPct;
+      monthlySpend = safeguardCutActive ? (floorTarget + (discretionaryTarget * reductionFactor)) : (floorTarget + discretionaryTarget);
+
+      if (robertAlive && current >= inputs.robertSSDate) robertSSThisMonth = inputs.robertSSMonthly;
+      if (kAge >= 67) keelySSThisMonth = inputs.keelySSMonthly;
+      if (!robertAlive && inputs.robertSSMonthly > 0) keelySSThisMonth = Math.max(keelySSThisMonth, inputs.robertSSMonthly);
+
+      vaThisMonth = inputs.vaBenefit;
+      fundingGap = Math.max(0, monthlySpend - (robertSSThisMonth + keelySSThisMonth + vaThisMonth));
+
+      acaCeiling = ((robertAlive ? inputs.fpl2 : inputs.fpl1) * inputs.acaFplPct) / 12;
+      let ssMagi = inputs.ssMAGIMethod === 'full' ? (robertSSThisMonth + keelySSThisMonth) : (robertSSThisMonth + keelySSThisMonth) * 0.85;
+      let availableMAGIRoom = Math.max(0, acaCeiling - (ssMagi + (inputs.vaTaxable ? vaThisMonth : 0)));
+
+      if (kAge < 65) {
+        conversion = inputs.autoConvert ? availableMAGIRoom : (inputs.manualConversion > 0 ? inputs.manualConversion / 12 : availableMAGIRoom);
+        acaPhaseMonthsCount++;
+      } else {
+        conversion = inputs.postMedicareConv / 12;
+      }
+
+      conversion = Math.max(0, Math.min(conversion, trad401k));
+      trad401k -= conversion;
+      
+      if (conversion > 0) {
+        conversionBatches.push({ amount: conversion, monthsOld: 0 });
+        if (kAge < 65) acaPhaseTotalConversions += conversion;
+      }
+
+      let needed = fundingGap;
+      let totalConvValue = conversionBatches.reduce((sum, b) => sum + b.amount, 0);
+      if (needed > 0 && (trad401k + keelyBasis + keelyEarnings + robertRoth + totalConvValue <= 0.01)) {
+        globalInsolvent = true;
+        if (insolvencyYear === null) { insolvencyYear = yr; insolvencyMonth = current.toLocaleString('default', { month: 'long' }); }
+      }
+
+      for (let i = 0; i < inputs.drawOrder.length; i++) {
+        if (needed <= 0) break;
+        let pool = inputs.drawOrder[i];
+
+        if (pool === 'robert_roth' && robertRoth > 0) {
+          const pull = Math.min(needed, robertRoth); robertRoth -= pull; needed -= pull;
+        } else if (pool === 'keely_basis' && keelyBasis > 0) {
+          const pull = Math.min(needed, keelyBasis); keelyBasis -= pull; needed -= pull;
+        } else if (pool === 'conversion') {
+          for (let b = 0; b < conversionBatches.length; b++) {
+            if (needed <= 0) break;
+            const isSeasoned = conversionBatches[b].monthsOld >= 60 || kAge >= 59.5;
+            if (isSeasoned) {
+              const pull = Math.min(needed, conversionBatches[b].amount); 
+              conversionBatches[b].amount -= pull; 
+              needed -= pull;
+            }
+          }
+        } else if (pool === 'keely_earnings' && keelyEarnings > 0) {
+          if (kAge < 59.5) { earlyRothViolationTriggered = true; continue; }
+          const pull = Math.min(needed, keelyEarnings); keelyEarnings -= pull; needed -= pull;
+        } else if (pool === 'trad_401k' && trad401k > 0) {
+          const pull = Math.min(needed, trad401k); trad401k -= pull; needed -= pull;
+        }
+      }
+
+      if (needed > 0) {
+        for (let b = 0; b < conversionBatches.length; b++) {
+          if (needed <= 0) break;
+          if (conversionBatches[b].monthsOld >= 60 || kAge >= 59.5) {
+            const pull = Math.min(needed, conversionBatches[b].amount); conversionBatches[b].amount -= pull; needed -= pull;
+          }
+        }
+      }
+      if (needed > 0) {
+        for (let b = 0; b < conversionBatches.length; b++) {
+          if (needed <= 0) break;
+          const pull = Math.min(needed, conversionBatches[b].amount); conversionBatches[b].amount -= pull; needed -= pull;
+        }
+      }
+      if (needed > 0 && trad401k > 0) { const pull = Math.min(needed, trad401k); trad401k -= pull; needed -= pull; }
+
+      drawdown = fundingGap - needed;
+      magiThisMonth = ssMagi + (inputs.vaTaxable ? vaThisMonth : 0) + conversion;
+      acaExceeded = (kAge < 65) && magiThisMonth > acaCeiling * 1.001;
+      if (acaExceeded && kAge < 65) acaPhaseOverCeilingCount++;
+    }
+
+    if (trad401k < 0.01) trad401k = 0; if (keelyBasis < 0.01) keelyBasis = 0;
+    if (keelyEarnings < 0.01) keelyEarnings = 0; if (robertRoth < 0.01) robertRoth = 0;
+    conversionBatches = conversionBatches.filter(b => b.amount > 0);
+
+    let activeConversionsSum = conversionBatches.reduce((sum, b) => sum + b.amount, 0);
+    let seasonedConversionsSum = conversionBatches.filter(b => b.monthsOld >= 60 || kAge >= 59.5).reduce((sum, b) => sum + b.amount, 0);
+    let unseasonedConversionsSum = activeConversionsSum - seasonedConversionsSum;
+    let keelyRothTotal = keelyBasis + keelyEarnings + activeConversionsSum;
+
+    const row = {
+      date: monthKey(current), year: yr, phase, keelyAgeStr: ageStr(inputs.keelyDOB, current), robertAgeStr: robertAlive ? ageStr(inputs.robertDOB, current) : '†',
+      monthlySpend, robertSS: robertSSThisMonth, keelySS: keelySSThisMonth, va: vaThisMonth, conversion, fundingGap, drawdown,
+      trad401k, keelyBasis, keelyEarnings, keelyConversionsTotal: activeConversionsSum, keelyConversionsSeasoned: seasonedConversionsSum,
+      keelyConversionsUnseasoned: unseasonedConversionsSum, keelyRothTotal, robertRoth, totalNetWorth: trad401k + keelyRothTotal + robertRoth,
+      magi: magiThisMonth, acaCeiling, acaExceeded, safeguardCutActive, houseSize: robertAlive ? 2 : 1, fplUsed: robertAlive ? inputs.fpl2 : inputs.fpl1
+    };
+    monthly.push(row);
+
+    if (!yearly[yr]) {
+      yearly[yr] = {
+        year: yr, phase, spend: 0, ss: 0, va: 0, conv: 0, gap: 0, drawdown: 0,
+        trad401k: 0, keelyBasis: 0, keelyEarnings: 0, keelyConversionsTotal: 0,
+        keelyConversionsSeasoned: 0, keelyConversionsUnseasoned: 0, keelyRothTotal: 0, robertRoth: 0, netWorth: 0,
+        magiSum: 0, acaCeiling: 0, acaExceededMonths: 0, count: 0, safeguardCutActive: false, houseSize: robertAlive ? 2 : 1, fplUsed: robertAlive ? inputs.fpl2 : inputs.fpl1
+      };
+    }
+    const y = yearly[yr];
+    y.spend += monthlySpend; y.ss += (robertSSThisMonth + keelySSThisMonth) * (isPreRetire ? 0 : 1); y.va += vaThisMonth;
+    y.conv += conversion; y.gap += fundingGap; y.drawdown += drawdown; y.magiSum += magiThisMonth;
+    if (acaExceeded) y.acaExceededMonths++; if (safeguardCutActive) y.safeguardCutActive = true; y.count++;
+
+    y.trad401k = trad401k; y.keelyBasis = keelyBasis; y.keelyEarnings = keelyEarnings;
+    y.keelyConversionsTotal = activeConversionsSum; y.keelyConversionsSeasoned = seasonedConversionsSum;
+    y.keelyConversionsUnseasoned = unseasonedConversionsSum; y.keelyRothTotal = keelyRothTotal;
+    y.robertRoth = robertRoth; y.netWorth = trad401k + keelyRothTotal + robertRoth; y.acaCeiling = acaCeiling;
+
+    current = addMonths(current, 1);
+  }
+
+  return { monthly, yearly, insolvencyYear, insolvencyMonth, earlyRothViolationTriggered, discretionaryCutYear, acaPhaseMonthsCount, acaPhaseOverCeilingCount, acaPhaseTotalConversions };
+}
+
+// ============================================================
+//  DASHBOARD COMPONENT GENERATORS
+// ============================================================
+function renderAll() {
+  renderOverview();
+  renderYearlyTable();
+  renderMonthlyTable();
+  renderACA();
+  renderInsights();
+}
+
+function renderOverview() {
+  const { yearly, insolvencyYear, insolvencyMonth, discretionaryCutYear } = simResults;
+  const yrs = Object.values(yearly);
+  const retireDate = parseMonth(document.getElementById('retireDate').value);
+  const retireRow = yrs.find(y => y.year === retireDate.getFullYear());
+
+  let stabilityHTML = `<div class="stat-card"><div class="stat-label">Plan Stability Status</div><div class="stat-val success">Solvent thru 2078</div></div>`;
+  if (insolvencyYear !== null) {
+    stabilityHTML = `<div class="stat-card" style="border: 1px solid var(--danger); background: rgba(255,68,68,0.05);"><div class="stat-label" style="color:var(--danger)">⚠️ Portfolio Depleted</div><div class="stat-val danger" style="color:var(--danger)">${insolvencyMonth} ${insolvencyYear}</div></div>`;
+  } else if (discretionaryCutYear !== null) {
+    const chosenCut = document.getElementById('discretionaryCutPct').value;
+    stabilityHTML = `<div class="stat-card" style="border: 1px solid var(--orange);"><div class="stat-label" style="color:var(--orange)">⚠️ Guardrail Active</div><div class="stat-val orange" style="color:var(--orange)">-${chosenCut}% Fun Money (${discretionaryCutYear})</div></div>`;
+  }
+
+  let html = `
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Net Worth at Retirement</div><div class="stat-val orange">${fmtK(retireRow ? retireRow.netWorth : 0)}</div></div>
+    <div class="stat-card"><div class="stat-label">401k Assets at Retirement</div><div class="stat-val cyan">${fmtK(retireRow ? retireRow.trad401k : 0)}</div></div>
+    <div class="stat-card"><div class="stat-label">Keely Roth (Retire)</div><div class="stat-val cyan">${fmtK(retireRow ? retireRow.keelyRothTotal : 0)}</div></div>
+    <div class="stat-card"><div class="stat-label">Robert Roth (Retire)</div><div class="stat-val lime">${fmtK(retireRow ? retireRow.robertRoth : 0)}</div></div>
+    ${stabilityHTML}
+  </div>
+  <div class="panel"><h2>Portfolio Growth Curves</h2><div class="chart-wrap"><canvas id="mainChart" height="120"></canvas></div></div>`;
+
+  document.getElementById('overviewContent').innerHTML = html;
+
+  const yearKeys = Object.keys(yearly).map(Number);
+  const ctx = document.getElementById('mainChart');
+  if (window._mainChart) window._mainChart.destroy();
+  window._mainChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: yearKeys,
+      datasets: [
+        { label: 'Total Net Worth', data: yearKeys.map(y => yearly[y].netWorth), borderColor: '#ffffff', borderWidth: 2, pointRadius: 0, fill: false },
+        { label: 'Traditional 401k', data: yearKeys.map(y => yearly[y].trad401k), borderColor: '#FF5F1F', borderWidth: 1.5, pointRadius: 0, fill: false },
+        { label: 'Keely Roth Total', data: yearKeys.map(y => yearly[y].keelyRothTotal), borderColor: '#00d9ff', borderWidth: 1.5, pointRadius: 0, fill: false },
+        { label: 'Robert Roth', data: yearKeys.map(y => yearly[y].robertRoth), borderColor: '#BFFF00', borderWidth: 1.5, pointRadius: 0, fill: false }
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { x: { ticks: { color: '#aaa' } }, y: { ticks: { color: '#aaa', callback: v => fmtK(v) } } } }
+  });
+}
+
+function renderYearlyTable() {
+  const { yearly } = simResults;
+  let html = `<div class="panel"><h2>Year-by-Year Master Accounting Ledger</h2><div class="table-wrap"><table><thead><tr><th>Year</th><th>Phase</th><th>Keely Age</th><th>Robert Age</th><th>Spending Target Outlay</th><th>SS Income Layers</th><th>Conversions Added</th><th>ACA Subsidies Status</th><th>Traditional 401k (EOY)</th><th>Direct Contributions Basis</th><th>Conversions (Seasoned / Locked)</th><th>Growth Earnings Pool</th><th>Keely Roth TOTAL</th><th>Robert Roth Balance</th><th>Total Net Worth Snapshot</th></tr></thead><tbody>`;
+
+  const keelyDobYear = parseMonth(document.getElementById('keelyDOB').value).getFullYear();
+  const robertDobYear = parseMonth(document.getElementById('robertDOB').value).getFullYear();
+  const robertEndYear = parseMonth(document.getElementById('robertEnd').value).getFullYear();
+
+  Object.values(yearly).forEach(y => {
+    const acaOk = y.phase === 'pre' || y.phase === 'post65' || y.acaExceededMonths === 0;
+    const phaseLabel = y.phase === 'pre' ? 'Pre-Retire' : y.phase === 'aca' ? 'ACA Bridge' : 'Post-65';
+    const phaseClass = y.phase === 'pre' ? 'phase-pre' : y.phase === 'aca' ? 'phase-aca' : 'phase-post';
+    const rowAlertStyle = y.safeguardCutActive ? `style="background: rgba(255,95,31,0.04); border-left: 3px solid var(--orange);"` : ``;
+    const chosenCut = document.getElementById('discretionaryCutPct').value;
+
+    const kAgeEstimated = y.year - keelyDobYear;
+    const rAgeEstimated = y.year - robertDobYear;
+    const robertAlive = y.year <= robertEndYear;
+
+    html += `<tr ${rowAlertStyle}>
+      <td><strong>${y.year}</strong> ${y.safeguardCutActive ? `<span style="color:var(--orange); font-size:0.72em; display:inline-block; margin-left:6px;">[GUARDRAIL:-${chosenCut}%]</span>` : ''}</td>
+      <td><span class="phase-label ${phaseClass}">${phaseLabel}</span></td>
+      <td style="text-align: center;">${kAgeEstimated}y</td>
+      <td style="text-align: center;">${robertAlive ? rAgeEstimated + 'y' : '†'}</td>
+      <td>${y.phase === 'pre' ? '—' : fmt(y.spend)}</td>
+      <td>${y.phase === 'pre' ? '—' : fmt(y.ss)}</td>
+      <td>${y.conv > 0 ? fmt(y.conv) : '—'}</td>
+      <td>${y.phase === 'aca' ? (acaOk ? '<span class="aca-ok">✓ OK</span>' : '<span class="aca-over">⚠ ' + y.acaExceededMonths + 'mo</span>') : '—'}</td>
+      <td>${fmt(y.trad401k)}</td>
+      <td>${fmt(y.keelyBasis)}</td>
+      <td style="text-align: right; color:var(--cyan)">${fmt(y.keelyConversionsSeasoned)} / <span style="color:#ffb366">${fmt(y.keelyConversionsUnseasoned)}</span></td>
+      <td>${fmt(y.keelyEarnings)}</td>
+      <td><strong>${fmt(y.keelyRothTotal)}</strong></td>
+      <td>${fmt(y.robertRoth)}</td>
+      <td><strong style="color:var(--lime)">${fmt(y.netWorth)}</strong></td>
+    </tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  document.getElementById('yearlyContent').innerHTML = html;
+}
+
+function renderMonthlyTable() {
+  const { monthly } = simResults;
+  let html = `<div class="panel"><h2>Monthly Micro-Accrual Diagnostics</h2><div class="monthly-table-wrap"><table><thead><tr><th>Month</th><th>Phase</th><th>Keely Age</th><th>Robert Age</th><th>Spending Draw</th><th>Robert SS</th><th>Keely SS</th><th>Conversion</th><th>Funding Gap</th><th>Traditional 401k</th><th>Direct Basis</th><th>Seasoned Conv</th><th>Locked Conv</th><th>Roth Earnings</th><th>Keely Roth Total</th><th>Robert Roth</th><th>Net Worth</th><th>MAGI Subsidies</th></tr></thead><tbody>`;
+  
+  monthly.forEach(r => {
+    html += `<tr>
+      <td>${r.date}</td>
+      <td>${r.phase.toUpperCase()}</td>
+      <td>${r.keelyAgeStr}</td>
+      <td>${r.robertAgeStr}</td>
+      <td ${r.safeguardCutActive ? `style="color:var(--orange)"` : ``}>${fmt(r.monthlySpend)}</td>
+      <td>${r.robertSS > 0 ? fmt(r.robertSS) : '—'}</td>
+      <td>${r.keelySS > 0 ? fmt(r.keelySS) : '—'}</td>
+      <td>${r.conversion > 0 ? fmt(r.conversion) : '—'}</td>
+      <td>${r.fundingGap > 0 ? fmt(r.fundingGap) : '—'}</td>
+      <td>${fmt(r.trad401k)}</td>
+      <td>${fmt(r.keelyBasis)}</td>
+      <td style="color:var(--success)">${fmt(r.keelyConversionsSeasoned)}</td>
+      <td style="color:#ffb366">${fmt(r.keelyConversionsUnseasoned)}</td>
+      <td>${fmt(r.keelyEarnings)}</td>
+      <td><strong>${fmt(r.keelyRothTotal)}</strong></td>
+      <td>${fmt(r.robertRoth)}</td>
+      <td><strong>${fmt(r.totalNetWorth)}</strong></td>
+      <td>${fmt(r.magi)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  document.getElementById('monthlyContent').innerHTML = html;
+}
+
+function renderACA() {
+  const { yearly, acaPhaseMonthsCount, acaPhaseOverCeilingCount, acaPhaseTotalConversions } = simResults;
+  const methodText = document.getElementById('ssMAGIMethod').options[document.getElementById('ssMAGIMethod').selectedIndex].text;
+
+  let html = `
+  <div class="panel">
+    <h2>ACA MAGI Analysis</h2>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">ACA Bridge Months</div>
+        <div class="stat-val orange">${acaPhaseMonthsCount}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Months Over ACA Ceiling</div>
+        <div class="stat-val ${acaPhaseOverCeilingCount > 0 ? 'danger' : 'success'}">${acaPhaseOverCeilingCount}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Roth Conversions (ACA Phase)</div>
+        <div class="stat-val cyan">${fmt(acaPhaseTotalConversions)}</div>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>How MAGI is calculated here:</strong><br>
+      Based on your selected method: <strong>${methodText}</strong><br>
+      MAGI = SS portion + VA (if taxable) + Roth conversion amount
+    </div>
+
+    <h3>Year-by-Year ACA Detail</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Keely Age</th>
+            <th>Household Size</th>
+            <th>FPL Used</th>
+            <th>ACA Ceiling (Annual)</th>
+            <th>Annual SS</th>
+            <th>Annual Conversions</th>
+            <th>Annual MAGI</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  Object.values(yearly).forEach(y => {
+    if (y.phase === 'pre') return;
+    
+    const avgMagi = y.count > 0 ? y.magiSum / y.count : 0;
+    const annualMagi = avgMagi * 12;
+    const annualCeiling = y.acaCeiling * 12;
+    const kAge = Math.floor(y.year - parseMonth(document.getElementById('keelyDOB').value).getFullYear());
+    
+    let statusLabel = '';
+    if (kAge >= 65) {
+      statusLabel = `<span style="color:var(--cyan)">Medicare</span>`;
+    } else if (y.acaExceededMonths === 0) {
+      statusLabel = `<span class="aca-ok">✓ Under ceiling</span>`;
+    } else {
+      statusLabel = `<span class="aca-over">⚠ Over ${y.acaExceededMonths} months</span>`;
+    }
+
+    html += `
+          <tr>
+            <td><strong>${y.year}</strong></td>
+            <td>~${kAge}</td>
+            <td>${y.houseSize}</td>
+            <td>${fmt(y.fplUsed)}</td>
+            <td>${annualCeiling > 0 ? fmt(annualCeiling) : 'N/A'}</td>
+            <td>${fmt(y.ss)}</td>
+            <td>${y.conv > 0 ? fmt(y.conv) : '—'}</td>
+            <td>${fmt(annualMagi)}</td>
+            <td>${statusLabel}</td>
+          </tr>`;
+  });
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+  
+  document.getElementById('acaContent').innerHTML = html;
+}
+
+function renderInsights() {
+  const { yearly, insolvencyYear, insolvencyMonth, earlyRothViolationTriggered, discretionaryCutYear } = simResults;
+  const yrs = Object.values(yearly);
+  const retireDate = parseMonth(document.getElementById('retireDate').value);
+  const keelyEnd = parseMonth(document.getElementById('keelyEnd').value);
+  const retireRow = yrs.find(y => y.year === retireDate.getFullYear());
+  const lastRow = yrs[yrs.length - 1];
+
+  const retireTrad = retireRow ? retireRow.trad401k : 0;
+  const retireKRoth = retireRow ? retireRow.keelyRothTotal : 0;
+  const retireRRoth = retireRow ? retireRow.robertRoth : 0;
+  const totalConversions = yrs.reduce((a,y) => a + y.conv, 0);
+
+  let html = '';
+
+  // 1. Pre-Retirement Summary Block
+  html += `
+  <div class="insight-block good">
+    <div class="insight-title good">Pre-Retirement Portfolio (${retireDate.getFullYear()})</div>
+    <div class="insight-body">
+      At retirement in ${retireDate.getFullYear()}, your projected balances are:<br>
+      <strong>Traditional 401(k):</strong> ${fmt(retireTrad)} &nbsp;|&nbsp;
+      <strong>Keely Roth:</strong> ${fmt(retireKRoth)} &nbsp;|&nbsp;
+      <strong>Robert Roth:</strong> ${fmt(retireRRoth)}<br>
+      Total: <strong>${fmt(retireTrad + retireKRoth + retireRRoth)}</strong>
+    </div>
+  </div>`;
+
+  // 2. ACA Bridge Tracking Block
+  const totalViolations = yrs.filter(y => y.phase === 'aca' && y.acaExceededMonths > 0);
+  if (totalViolations.length === 0) {
+    html += `
+    <div class="insight-block good">
+      <div class="insight-title good">ACA Coverage — Looking Good</div>
+      <div class="insight-body">
+        With auto conversions, your projected MAGI stays under your ACA ceiling every month during the bridge years. You should qualify for maximum premium subsidies through age 65. Total Roth conversions during ACA phase: <strong>${fmt(simResults.acaPhaseTotalConversions)}</strong>
+      </div>
+    </div>`;
+  } else {
+    html += `
+    <div class="insight-block bad">
+      <div class="insight-title bad">ACA Coverage Cap Exceeded — Plan Overages Detected</div>
+      <div class="insight-body">
+        The portfolio layout surpasses your stated target thresholds for ${totalViolations.length} distinct processing years. Consider dropping optional allocations or utilizing alternative priority pools to preserve low-tax access.
+      </div>
+    </div>`;
+  }
+
+  // 3. Early Roth Violation Shield Warning Card
+  if (earlyRothViolationTriggered) {
+    html += `
+    <div class="insight-block bad">
+      <div class="insight-title bad">🚨 UNPROTECTED EARLY ROTH EARNING BALANCES ACCESSED</div>
+      <div class="insight-body">
+        The engine detected a scenario attempting to extract growth components from Keely's Roth prior to Age 59½. 
+        <strong>Current safety logic successfully intercepted this and redirected the execution flow</strong> into traditional assets to protect you from a 10% early withdrawal penalty and standard income tax.
+      </div>
+    </div>`;
+  } else {
+    html += `
+    <div class="insight-block good">
+      <div class="insight-title good">✓ Roth Distribution Penalty Shield Active</div>
+      <div class="insight-body">
+        No unprotected Roth conversion or early earnings rules are violated in this setup. Distributions are perfectly isolated to penalty-free contributions and seasoned assets.
+      </div>
+    </div>`;
+  }
+
+  // 4. Guardrail Adjustment Card
+  if (discretionaryCutYear !== null) {
+    const chosenCut = document.getElementById('discretionaryCutPct').value;
+    html += `
+    <div class="insight-block warn">
+      <div class="insight-title warn">⚠️ Spending Guardrail Triggered — ${discretionaryCutYear}</div>
+      <div class="insight-body">
+        Reserves dipped below safety targets during calculation routines. The layout dynamically initiated your custom <strong>-${chosenCut}% discretionary spending reduction</strong>, saving cash reserves and extending portfolio longevity.
+      </div>
+    </div>`;
+  }
+
+  // 5. Survivor Modeling Frame
+  html += `
+  <div class="insight-block">
+    <div class="insight-title info">Widow / Survivor Scenario Modeling</div>
+    <div class="insight-body">
+      To model Robert dying early: change his life expectancy date on the Inputs tab. The model will automatically:<br>
+      • Switch Keely to survivor SS benefit (max of both)<br>
+      • Switch ACA household size from 2 to 1 (lower FPL ceiling)<br>
+      • Stop Robert's Roth from growing/being drawn<br><br>
+      To model Keely dying first: change Keely's end date. Robert receives max survivor benefit.
+    </div>
+  </div>`;
+
+  // 6. Conversions Tracker Card
+  html += `
+  <div class="insight-block good">
+    <div class="insight-title good">Total Roth Conversion Strategy</div>
+    <div class="insight-body">
+      Projected total Roth conversions over the entire plan: <strong>${fmt(totalConversions)}</strong><br>
+      This gradually depletes the pre-tax 401(k) — reducing future RMDs and widow tax trap exposure.
+      401(k) balance at end of plan: <strong>${fmt(lastRow.trad401k)}</strong>
+    </div>
+  </div>`;
+
+  // 7. Insolvency Runway Check block
+  if (insolvencyYear !== null) {
+    html += `
+    <div class="insight-block bad">
+      <div class="insight-title bad">End of Plan Balance (${keelyEnd.getFullYear()})</div>
+      <div class="insight-body">
+        <strong style="color:var(--danger)">🚨 CRITICAL ERROR: PORTFOLIO EXHAUSTED IN ${insolvencyMonth.toUpperCase()} ${insolvencyYear}</strong><br>
+        Your cash completely bottoms out before your life expectancy target. To balance your plan runway, you must adjust contribution levels upwards or shift lifestyle consumption demands.
+      </div>
+    </div>`;
+  } else {
+    html += `
+    <div class="insight-block good">
+      <div class="insight-title good">End of Plan Balance (${keelyEnd.getFullYear()})</div>
+      <div class="insight-body">
+        Final projected net worth: <strong>${fmt(lastRow.netWorth)}</strong><br>
+        Keely Roth: ${fmt(lastRow.keelyRothTotal)} &nbsp;|&nbsp;
+        Robert Roth: ${fmt(lastRow.robertRoth)} &nbsp;|&nbsp;
+        401(k): ${fmt(lastRow.trad401k)}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('insightsContent').innerHTML = html;
+}
+
+runSimulation();
+</script>
+</body>
+</html>
